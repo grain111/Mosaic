@@ -1,18 +1,18 @@
-NAME OF THE PROJECT!
+MOSAIC!
 ===================================
 
-This is a skeleton project. You can built new projects based on this template.
+This is a simple peace of code that creates a mosaic from given photos.
 
 TODO
 ====
 
-There is nothing to do right now.
+[ ] Create documentation
 
 
 Contributing
 ============
 
-skeleton itself has no external dependencies, but if you want to contribute to the project you will need
-to install two libraries:
+Mosaic itself has no external dependencies, but if you want to contribute to the project you will need
+to install one librarie:
 
- * nose
+ * pillow
