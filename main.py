@@ -1,5 +1,7 @@
 import glob, os, math, sys
 from PIL import Image
+from tqdm import tqdm
+import pickle
 
 def calc_dist(a,b):
     """ This function calculates distance betwen two points in space. "a" and "b" are tuples."""
@@ -46,7 +48,7 @@ def handle_data(folder_name, SIZE, MODE):
     path = "data\photos\\" + folder_name + "\*.jpg"
     list_of_paths = glob.glob(path)
     n = 0
-    for path in list_of_paths:
+    for path in tqdm(list_of_paths):
         photo = Image.open(path)
         min_dim = min(photo.width, photo.height)
 
@@ -68,7 +70,7 @@ def get_data_color(list_of_paths):
     print("Started data processing.")
     photo_color = []
 
-    for path in list_of_paths:
+    for path in tqdm(list_of_paths):
         photo = Image.open(path)
 
         reds = 0
@@ -78,6 +80,8 @@ def get_data_color(list_of_paths):
         for x in range(0, photo.width):
             for y in range(0, photo.height):
                 RGB = photo.getpixel((x,y))
+                if isinstance(RGB, int):
+                    RGB = (0,0,0)
                 reds += RGB[0]
                 greens += RGB[1]
                 blues += RGB[2]
@@ -96,7 +100,7 @@ def get_data_brightness(list_of_paths):
     print("Started data processing.")
     photo_brit = []
 
-    for path in list_of_paths:
+    for path in tqdm(list_of_paths):
         photo = Image.open(path)
         brit = 0
         for x in range(0, photo.width):
@@ -111,7 +115,7 @@ def get_data_brightness(list_of_paths):
 
 def get_source_pixel_data(im):
     data = []
-    for x in range(0, im.width):
+    for x in tqdm(range(0, im.width)):
         for y in range(0, im.height):
             RGB = im.getpixel((x,y))
             data.append(RGB)
@@ -126,7 +130,7 @@ def match_data(data, source_data, list_of_paths, MODE):
     copy_list = list_of_paths
     copy_data = data
 
-    for source_pixel in source_data:
+    for source_pixel in tqdm(source_data):
         distance = []
         for photo in copy_data:
             distance.append(calc_dist(source_pixel, photo))
@@ -149,7 +153,7 @@ def assemble_image(im, matched_data, SIZE, MODE):
         out = Image.new("RGB", (im.width*SIZE, im.height*SIZE))
 
     n = 0
-    for x in range(0, im.width):
+    for x in tqdm(range(0, im.width)):
         for y in range(0, im.height):
             photo = Image.open(matched_data[n])
             out.paste(photo, (SIZE*x,SIZE*y))
@@ -159,12 +163,12 @@ def assemble_image(im, matched_data, SIZE, MODE):
     return out
 
 def main():
-    SCL = 70
-    SIZE = 300
+    SCL = 30
+    SIZE = 250
     MODE = "GS" # GS -> Greyscale, COLOR -> color
     MODE2 = "U" # U -> no same photos R-> phots may repeat
 
-    im = load_source("kasia.jpg", SCL, MODE)
+    im = load_source("kasia2.jpg", SCL, MODE)
     handle_data("RAW", SIZE, MODE)
     list_of_paths = get_list_of_paths()
 
@@ -173,16 +177,17 @@ def main():
             print("ERROR: Not enough photos!")
             sys.exit()
 
-    if MODE == "GS":
-        data = get_data_brightness(list_of_paths)
-    if MODE == "COLOR":
-        data = get_data_color(list_of_paths)
+    if MODE == "GS": data = get_data_brightness(list_of_paths)
+    if MODE == "COLOR": data = get_data_color(list_of_paths)
+
+    with open('data.p', 'wb') as fp: pickle.dump(data, fp)
+    with open ('data.p', 'rb') as fp: data = pickle.load(fp)
 
     source_data = get_source_pixel_data(im)
     matched_data = match_data(data, source_data, list_of_paths, MODE2)
     output_image = assemble_image(im, matched_data, SIZE, MODE)
 
-    output_image.save("output.jpg")
+    output_image.save("output3.jpg")
 
     print("DONE!")
 
